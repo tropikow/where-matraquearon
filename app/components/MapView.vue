@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Report } from '~/composables/useReports'
+import { alertMinutesLeft } from '~/composables/useReports'
 
 const props = defineProps<{ reports: Report[] }>()
 
@@ -33,12 +34,15 @@ onMounted(async () => {
   }).addTo(map)
 
   for (const r of props.reports) {
+    const min = alertMinutesLeft(r.created_at)
+    const expiryLabel = min <= 0 ? 'expirando' : min < 60 ? `vence en ${min} min` : `vence en ${Math.floor(min / 60)}h ${min % 60}m`
     const popup = `
       <div class="lf-popup">
         <div class="lf-popup__icon">⚠</div>
         <p class="lf-popup__addr">${r.address || 'Ubicación reportada'}</p>
         ${r.description ? `<p class="lf-popup__desc">${r.description}</p>` : ''}
         <p class="lf-popup__date">${formatDate(r.created_at)}</p>
+        <p class="lf-popup__expiry">${expiryLabel}</p>
       </div>`
 
     L.circleMarker([r.lat, r.lng], {
@@ -72,6 +76,7 @@ onUnmounted(() => {
 .lf-popup__addr { font-size: 0.85rem; font-weight: 600; color: #111; }
 .lf-popup__desc { font-size: 0.8rem; color: #444; max-width: 200px; }
 .lf-popup__date { font-size: 0.75rem; color: #888; }
+.lf-popup__expiry { font-size: 0.72rem; color: #f59e0b; font-weight: 600; }
 </style>
 
 <style scoped>

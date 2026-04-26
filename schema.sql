@@ -1,4 +1,5 @@
 -- Run this in your Supabase SQL editor
+-- Alerts are active for 2 hours from created_at; the app filters by created_at >= now() - interval '2 hours'
 
 create table public.reports (
   id          uuid             default gen_random_uuid() primary key,

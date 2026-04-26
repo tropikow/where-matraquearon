@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Report } from '~/composables/useReports'
+import { alertMinutesLeft } from '~/composables/useReports'
 
 useHead({ title: 'Mapa de Reportes — Dónde Matraquearon' })
 
@@ -9,7 +10,7 @@ const reports = ref<Report[]>([])
 const loading = ref(true)
 const error = ref('')
 
-onMounted(async () => {
+async function loadReports() {
   try {
     reports.value = await fetchReports()
   } catch {
@@ -17,6 +18,18 @@ onMounted(async () => {
   } finally {
     loading.value = false
   }
+}
+
+let refreshTimer: ReturnType<typeof setInterval> | null = null
+
+onMounted(() => {
+  loadReports()
+  // Re-fetch every 60s so expired alerts disappear without manual reload
+  refreshTimer = setInterval(loadReports, 60_000)
+})
+
+onUnmounted(() => {
+  if (refreshTimer) clearInterval(refreshTimer)
 })
 
 function formatDate(iso: string) {
@@ -24,6 +37,15 @@ function formatDate(iso: string) {
     day: 'numeric', month: 'short', year: 'numeric',
     hour: '2-digit', minute: '2-digit',
   })
+}
+
+function formatExpiry(iso: string) {
+  const min = alertMinutesLeft(iso)
+  if (min <= 0) return 'expirando'
+  if (min < 60) return `${min} min`
+  const h = Math.floor(min / 60)
+  const m = min % 60
+  return m > 0 ? `${h}h ${m}m` : `${h}h`
 }
 
 const recentReports = computed(() => reports.value.slice(0, 5))
@@ -35,7 +57,7 @@ const recentReports = computed(() => reports.value.slice(0, 5))
     <div class="map-panel">
       <div class="map-panel__header">
         <span class="map-panel__dot" />
-        <span class="map-panel__title">Reportes registrados</span>
+        <span class="map-panel__title">Alertas activas</span>
       </div>
 
       <div v-if="loading" class="map-panel__loading">
@@ -52,7 +74,10 @@ const recentReports = computed(() => reports.value.slice(0, 5))
             <span class="map-panel__item-addr">
               {{ r.address || `${r.lat.toFixed(3)}, ${r.lng.toFixed(3)}` }}
             </span>
-            <span class="map-panel__item-date">{{ formatDate(r.created_at) }}</span>
+            <span class="map-panel__item-meta">
+              <span class="map-panel__item-date">{{ formatDate(r.created_at) }}</span>
+              <span class="map-panel__item-expiry">vence en {{ formatExpiry(r.created_at) }}</span>
+            </span>
           </li>
         </ul>
 
@@ -183,9 +208,20 @@ const recentReports = computed(() => reports.value.slice(0, 5))
   overflow: hidden;
   text-overflow: ellipsis;
 }
+.map-panel__item-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 6px;
+}
 .map-panel__item-date {
   font-size: 0.72rem;
   color: var(--text-muted);
+}
+.map-panel__item-expiry {
+  font-size: 0.68rem;
+  color: #f59e0b;
+  white-space: nowrap;
 }
 
 .map-panel__report-btn {
