@@ -16,6 +16,9 @@ const coords = ref<{ lat: number; lng: number } | null>(null)
 const address = ref('')
 const loadingAddress = ref(false)
 
+// Info modal
+const showInfo = ref(false)
+
 // Stats
 const totalReports = ref<number | null>(null)
 
@@ -96,6 +99,7 @@ function showToast(type: 'success' | 'error', text: string) {
         <p class="hero__desc">
           Reporta puntos de matraca, alcabalas o extorsión policial.<br />
           Ayuda a otros venezolanos a prevenir y estar alertas.
+          <button class="hero__info-link" @click="showInfo = true">Conocer más</button>
         </p>
 
         <!-- Report Button -->
@@ -171,6 +175,49 @@ function showToast(type: 'success' | 'error', text: string) {
     @confirm="handleConfirm"
     @cancel="handleCancel"
   />
+
+  <!-- Info modal -->
+  <Transition name="info-modal">
+    <div v-if="showInfo" class="info-overlay" @click.self="showInfo = false">
+      <div class="info-modal">
+        <button class="info-modal__close" aria-label="Cerrar" @click="showInfo = false">✕</button>
+
+        <h2 class="info-modal__title">Cómo funciona</h2>
+        <p class="info-modal__subtitle">Una herramienta construida por venezolanos, para venezolanos.</p>
+
+        <ul class="info-modal__list">
+          <li class="info-modal__item">
+            <span class="info-modal__icon">🕵️</span>
+            <div>
+              <strong>100 % anónimo</strong>
+              <p>No se registran nombres, cuentas ni datos personales. Nadie sabe quién reportó.</p>
+            </div>
+          </li>
+          <li class="info-modal__item">
+            <span class="info-modal__icon">🗺️</span>
+            <div>
+              <strong>Identifica zonas de riesgo</strong>
+              <p>El mapa muestra dónde se concentran las matraqueos y alcabalas, para que puedas tomar decisiones informadas.</p>
+            </div>
+          </li>
+          <li class="info-modal__item">
+            <span class="info-modal__icon">😌</span>
+            <div>
+              <strong>Circula más tranquilo</strong>
+              <p>Conoce qué rutas y zonas están tranquilas para moverte con más calma.</p>
+            </div>
+          </li>
+          <li class="info-modal__item">
+            <span class="info-modal__icon">⏱️</span>
+            <div>
+              <strong>Alertas en tiempo real</strong>
+              <p>Cada reporte dura 2 horas activo en el mapa, así la información siempre es reciente.</p>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </Transition>
 
   <!-- Toast -->
   <Transition name="toast">
@@ -360,6 +407,116 @@ function showToast(type: 'success' | 'error', text: string) {
 @media (max-width: 500px) {
   .how__divider { display: none; }
 }
+
+/* ---- "Conocer más" inline link ---- */
+.hero__info-link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--red);
+  font-size: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  transition: opacity 0.15s;
+}
+.hero__info-link:hover { opacity: 0.75; }
+
+/* ---- Info modal overlay ---- */
+.info-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 900;
+  background: rgba(0, 0, 0, 0.72);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.info-modal {
+  position: relative;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  padding: 32px 28px 28px;
+  max-width: 480px;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.info-modal__close {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.info-modal__close:hover { background: var(--surface-3, #2a2a2a); color: var(--text); }
+
+.info-modal__title {
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--text);
+  padding-right: 32px;
+}
+
+.info-modal__subtitle {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: -12px;
+}
+
+.info-modal__list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.info-modal__item {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+}
+
+.info-modal__icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  margin-top: 1px;
+}
+
+.info-modal__item strong {
+  display: block;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text);
+  margin-bottom: 2px;
+}
+
+.info-modal__item p {
+  font-size: 0.82rem;
+  color: var(--text-muted);
+  line-height: 1.55;
+}
+
+/* ---- Info modal transition ---- */
+.info-modal-enter-active, .info-modal-leave-active { transition: opacity 0.22s, transform 0.22s; }
+.info-modal-enter-from, .info-modal-leave-to { opacity: 0; transform: scale(0.97) translateY(8px); }
 
 /* ---- Toast transition ---- */
 .toast-enter-active, .toast-leave-active { transition: opacity 0.3s, transform 0.3s; }
